@@ -1,0 +1,59 @@
+# FlowForge — one-command demo stack: backend + frontend + a live n8n instance.
+#
+#   cp .env.example .env      # fill in FIREWORKS_API_KEY (dev) or AMD_MODEL_ENDPOINT (demo)
+#   docker compose up --build
+#
+# Services:
+#   frontend -> http://localhost:5173   (React UI)
+#   backend  -> http://localhost:8080   (FastAPI, /health works out of the box)
+#   n8n      -> http://localhost:5678    (create an API key in Settings -> n8n API)
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: flowforge-backend
+    env_file: .env
+    environment:
+      # Inside the compose network the backend reaches n8n by service name.
+      - N8N_API_URL=http://n8n:5678/api/v1
+      - N8N_EDITOR_URL=http://localhost:5678
+    ports:
+      - "8080:8080"
+    depends_on:
+      - n8n
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: flowforge-frontend
+    environment:
+      # Browser talks to the backend on the host-published port.
+      - VITE_BACKEND_URL=http://localhost:8080
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: flowforge-n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=UTC
+      - N8N_DIAGNOSTICS_ENABLED=false
+      # Public REST API (/api/v1) stays enabled so the eval harness & backend can import.
+      - N8N_PUBLIC_API_DISABLED=false
+    volumes:
+      - n8n_data:/home/node/.n8n
+    restart: unless-stopped
+
+volumes:
+  n8n_data:

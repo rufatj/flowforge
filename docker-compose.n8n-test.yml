@@ -1,0 +1,29 @@
+# Throwaway n8n instance for gate-3 (live import) testing ONLY.
+# Completely separate from the main docker-compose.yml demo stack.
+#
+#   docker compose -f docker-compose.n8n-test.yml up -d
+#   -> http://localhost:5679  (create owner account, then Settings -> n8n API -> create key)
+#
+# N8N_ENCRYPTION_KEY is pinned so API keys survive container restarts —
+# an unpinned key regenerates on every restart and silently invalidates
+# every previously issued API key (the exact bug that hit the droplet).
+
+services:
+  n8n-test:
+    image: n8nio/n8n:latest
+    container_name: flowforge-n8n-test
+    ports:
+      - "5679:5678"
+    environment:
+      - N8N_ENCRYPTION_KEY=flowforge-hackathon-fixed-key-2026
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_SECURE_COOKIE=false
+      - GENERIC_TIMEZONE=UTC
+      - N8N_DIAGNOSTICS_ENABLED=false
+      # Public REST API (/api/v1) must stay enabled for gate 3 imports.
+      - N8N_PUBLIC_API_DISABLED=false
+    volumes:
+      - ./n8n-test-data:/home/node/.n8n
+    restart: unless-stopped

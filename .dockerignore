@@ -1,0 +1,10 @@
+# Keep docker build contexts small (backend builds from the repo root).
+.git
+.env
+**/__pycache__
+**/*.pyc
+data/out
+ml/outputs
+frontend/node_modules
+frontend/dist
+frontend/.vite

@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-ink-950 text-zinc-100 font-sans antialiased;
+}
+
+/* ----------------------------------------------------------------- reveal --
+   Scroll-into-view entrance. Elements start hidden and settle with ease-out.
+   A .is-visible class is added once by the useReveal IntersectionObserver. */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ------------------------------------------------------------- ambient art --
+   Slow, continuous loops for the luxury background. Long durations on purpose:
+   these are atmosphere, not micro-interactions. */
+@keyframes aurora-drift {
+  0%   { transform: translate3d(-6%, -3%, 0) scale(1); }
+  50%  { transform: translate3d(6%, 4%, 0) scale(1.12); }
+  100% { transform: translate3d(-6%, -3%, 0) scale(1); }
+}
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+@keyframes breathe {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 0.6; }
+}
+@keyframes draw-line {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+
+.animate-aurora { animation: aurora-drift 26s ease-in-out infinite; }
+.animate-spin-slow { animation: spin-slow 14s linear infinite; }
+.animate-breathe { animation: breathe 6s ease-in-out infinite; }
+
+/* Mask helper: fade a media element's edges into the page so it reads frameless. */
+.mask-blend {
+  -webkit-mask-image: radial-gradient(75% 75% at 50% 45%, #000 55%, transparent 100%);
+  mask-image: radial-gradient(75% 75% at 50% 45%, #000 55%, transparent 100%);
+}
+
+/* Honor reduced-motion: no smooth scroll, no loops, everything shown at rest. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .animate-aurora, .animate-spin-slow, .animate-breathe { animation: none; }
+}

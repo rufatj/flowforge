@@ -1,0 +1,37 @@
+# --- Secrets ---------------------------------------------------------------
+.env
+
+# --- Python ----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+unsloth_env/
+.ipynb_checkpoints/
+
+# --- Node / frontend -------------------------------------------------------
+node_modules/
+frontend/dist/
+frontend/.vite/
+npm-debug.log*
+
+# --- Local n8n test instance data (gate-3 testing) --------------------------
+n8n-test-data/
+
+# --- Generated data & model artifacts (large, never commit) ----------------
+data/out/*
+!data/out/.gitkeep
+ml/outputs/*
+!ml/outputs/.gitkeep
+
+# --- Eval results are generated, but keep a placeholder in git -------------
+eval/results/*
+!eval/results/.gitkeep
+!eval/results/results.json
+
+# --- OS / editor -----------------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
