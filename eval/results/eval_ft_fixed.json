@@ -1,0 +1,8 @@
+{
+  "label": "fine-tuned-gemma-3-4b",
+  "model": "ml/outputs/merged-gemma-flowforge",
+  "total": 30,
+  "gate1": 0.2,
+  "gate2": 0.2,
+  "gate3": null
+}

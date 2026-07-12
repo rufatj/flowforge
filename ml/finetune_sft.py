@@ -67,7 +67,10 @@ def main() -> None:
         args=build_sft_config(),
         max_seq_length=MAX_SEQ_LENGTH,
     )
-    trainer.train()
+    import glob as _glob
+    _ckpts = _glob.glob(str(ADAPTER_DIR.parent / "checkpoints" / "checkpoint-*"))
+    print(f"[resume] found {len(_ckpts)} checkpoint(s)" )
+    trainer.train(resume_from_checkpoint=True if _ckpts else None)
 
     ADAPTER_DIR.mkdir(parents=True, exist_ok=True)
     MERGED_DIR.mkdir(parents=True, exist_ok=True)

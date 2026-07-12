@@ -5,7 +5,6 @@ just enough of the OpenAI schema for backend/app/model_client.py and
 eval/run_eval.py to work unchanged (MODEL_MODE=amd pointed at this port).
 
 On the droplet:
-    HSA_OVERRIDE_GFX_VERSION=9.4.2 python serving/serve_fallback.py \
         --model ml/outputs/merged-gemma-flowforge --port 8000
 """
 from __future__ import annotations
@@ -14,7 +13,6 @@ import argparse
 import os
 import time
 
-os.environ.setdefault("HSA_OVERRIDE_GFX_VERSION", "9.4.2")
 
 from fastapi import FastAPI
 from pydantic import BaseModel

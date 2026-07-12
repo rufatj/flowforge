@@ -1,0 +1,8 @@
+{
+  "label": "base-gemma-3-4b",
+  "model": "unsloth/gemma-3-4b-it",
+  "total": 30,
+  "gate1": 0.0,
+  "gate2": 0.0,
+  "gate3": null
+}
