@@ -1,7 +1,7 @@
 """OpenAI-compatible generation call used by run_eval.
 
 Works against any /v1/chat/completions endpoint: Fireworks (baseline), the
-AMD MI300X vLLM server (fine-tuned), or a local stub during testing.
+AMD GPU pod vLLM server (fine-tuned), or a local stub during testing.
 """
 from __future__ import annotations
 

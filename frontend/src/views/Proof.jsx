@@ -25,7 +25,7 @@ function StatTile({ title, run, color }) {
         {run ? pct(run.gate3) : "pending"}
       </div>
       <div className="mt-1 text-xs text-zinc-500">
-        {run ? `live import success · n=${run.total} · ${run.model}` : "runs after MI300X fine tuning"}
+        {run ? `live import success · n=${run.total} · ${run.model}` : "runs after AMD fine tuning"}
       </div>
     </div>
   );

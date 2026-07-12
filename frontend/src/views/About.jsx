@@ -10,7 +10,7 @@ export default function About() {
       <Reveal as="p" delay={80} className="text-[15px] leading-relaxed text-zinc-300">
         FlowForge is your local n8n copilot. It turns a plain language description of an automation
         into a valid, importable n8n workflow using a Gemma model fine tuned with LoRA on an AMD
-        MI300X and served with vLLM. The backend routes between a Fireworks endpoint for development
+        Radeon PRO W7900 and served with vLLM. The backend routes between a Fireworks endpoint for development
         and your own AMD endpoint for the live demo, so your prompts and workflows never leave your
         infrastructure.
       </Reveal>

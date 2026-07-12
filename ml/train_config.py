@@ -1,11 +1,12 @@
-"""SFT training arguments for the MI300X run.
+"""SFT training arguments for the AMD GPU pod (Radeon PRO W7900, 48 GB).
 
-Effective batch = PER_DEVICE_BATCH x GRAD_ACCUM = 16. If the box OOMs at
-seq len 8192 (long workflow JSONs), halve PER_DEVICE_BATCH and double
-GRAD_ACCUM - same effective batch, same result, slower wall clock.
+Effective batch = PER_DEVICE_BATCH x GRAD_ACCUM = 16. Batch 2 x accum 8 is
+sized for the W7900's 48 GB at seq len 8192 (the original 4 x 4 was tuned
+for a 192 GB MI300X). If the box STILL OOMs, halve PER_DEVICE_BATCH and
+double GRAD_ACCUM - same effective batch, same result, slower wall clock.
 
-Loss sanity (from Unsloth's Gemma guide): 1-3 is normal for a 12B dense
-model; 100+ means the (long-fixed) gradient-accumulation bug - update Unsloth.
+Loss sanity (from Unsloth's Gemma guide): 1-3 is normal for Gemma-class
+dense models; 100+ means the (long-fixed) gradient-accumulation bug - update Unsloth.
 """
 from __future__ import annotations
 
@@ -18,8 +19,8 @@ MERGED_DIR = OUTPUT_DIR / "merged-gemma-flowforge"
 
 EPOCHS = 2
 LEARNING_RATE = 2e-4
-PER_DEVICE_BATCH = 4
-GRAD_ACCUM = 4
+PER_DEVICE_BATCH = 2   # sized for 48 GB VRAM (W7900); was 4 on the 192 GB MI300X
+GRAD_ACCUM = 8         # keeps effective batch at 16
 WARMUP_RATIO = 0.03
 LOGGING_STEPS = 10
 

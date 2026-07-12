@@ -1,5 +1,6 @@
 import Reveal from "../Reveal.jsx";
 import Eyebrow from "./Eyebrow.jsx";
+import { useTilt } from "../../hooks/useTilt.js";
 import { Describe, Import } from "./icons.jsx";
 
 const CARDS = [
@@ -11,8 +12,6 @@ const CARDS = [
     body: "One click sends it into your n8n instance. Webhook inputs receive a test form on their own. Everything stays local." },
 ];
 
-// Card visual: matched 56px tile for each step, cyan icon or the thinking gif.
-// Hover lifts a soft cyan glow via ring + shadow, never a layout shift.
 function Visual({ card }) {
   if (card.gif) {
     return (
@@ -28,20 +27,29 @@ function Visual({ card }) {
   );
 }
 
+// Each card reveals in sequence (long stagger reads as one-by-one), then
+// carries physical weight under the cursor via a gentle 3D tilt.
+function Card({ card, index }) {
+  const tiltRef = useTilt({ max: 6, scale: 1.015 });
+  return (
+    <Reveal delay={index * 220}>
+      <div ref={tiltRef}
+        className="tilt group h-full rounded-2xl border border-white/[0.07] bg-white/[0.02] p-8 hover:border-accent/25 hover:bg-white/[0.035] hover:shadow-[0_0_40px_-12px_rgba(56,189,248,0.35)]">
+        <Visual card={card} />
+        <h3 className="mt-6 text-lg font-semibold text-zinc-100">{card.title}</h3>
+        <p className="mt-3 text-[15px] leading-relaxed text-zinc-400">{card.body}</p>
+      </div>
+    </Reveal>
+  );
+}
+
 export default function HowItWorks() {
   return (
     <section id="how" className="scroll-mt-24 py-28">
       <div className="mx-auto max-w-6xl px-6">
         <Eyebrow label="The flow" title="From a sentence to a workflow that runs" />
         <div className="mt-16 grid gap-6 md:grid-cols-3">
-          {CARDS.map((card, i) => (
-            <Reveal key={card.key} delay={i * 110}
-              className="group rounded-2xl border border-white/[0.07] bg-white/[0.02] p-8 transition-all duration-300 hover:border-accent/25 hover:bg-white/[0.035] hover:shadow-[0_0_40px_-12px_rgba(56,189,248,0.35)]">
-              <Visual card={card} />
-              <h3 className="mt-6 text-lg font-semibold text-zinc-100">{card.title}</h3>
-              <p className="mt-3 text-[15px] leading-relaxed text-zinc-400">{card.body}</p>
-            </Reveal>
-          ))}
+          {CARDS.map((card, i) => <Card key={card.key} card={card} index={i} />)}
         </div>
       </div>
     </section>

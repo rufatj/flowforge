@@ -3,7 +3,7 @@
 Usage (baseline via Fireworks, then fine-tuned via AMD vLLM):
     python -m eval.run_eval --label base-gemma --base-url https://api.fireworks.ai/inference/v1 \
         --model <fireworks-model-id> --api-key $FIREWORKS_API_KEY --limit 10
-    python -m eval.run_eval --label flowforge-sft --base-url http://<mi300x>:8000/v1 --model flowforge
+    python -m eval.run_eval --label flowforge-sft --base-url http://<gpu-pod>:8000/v1 --model flowforge
 
 Appends a run into eval/results/results.json:
     {"runs": [{"label", "model", "gate1", "gate2", "gate3", "total", "examples": [...]}]}

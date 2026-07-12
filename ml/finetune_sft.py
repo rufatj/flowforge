@@ -1,7 +1,11 @@
-"""FlowForge SFT entrypoint - RUNS ON AMD MI300X, NOT LOCALLY.
+"""FlowForge SFT entrypoint - RUNS ON THE AMD GPU POD, NOT LOCALLY.
 
-============================ MI300X / ROCm context ============================
-Fresh AMD Developer Cloud droplet (ROCm PyTorch image), one-time setup:
+===================== Radeon PRO W7900 (gfx1100) / ROCm =======================
+Target GPU: Radeon PRO W7900 — RDNA3, gfx1100, 48 GB VRAM (NOT an MI300X).
+gfx1100 is natively supported by ROCm: do NOT set HSA_OVERRIDE_GFX_VERSION.
+(The old 9.4.2 override spoofed gfx942/MI300X and would break RDNA3 kernels.)
+
+Fresh pod (ROCm PyTorch image), one-time setup:
 
     apt update && apt install python3.12-venv -y
     python3 -m venv unsloth_env && source unsloth_env/bin/activate
@@ -13,9 +17,10 @@ Fresh AMD Developer Cloud droplet (ROCm PyTorch image), one-time setup:
 
 Then, from the repo root:  python -m ml.finetune_sft
 
-Notes: HSA_OVERRIDE_GFX_VERSION=9.4.2 makes ROCm treat the GPU as gfx942
-(MI300X); Flash-Attention 2 is unavailable on ROCm so Unsloth falls back to
-xformers; billing runs until the droplet is DESTROYED, so pull ml/outputs/
+Notes: Flash-Attention 2 is unavailable on ROCm so Unsloth falls back to
+xformers. CAUTION: Unsloth's AMD path is primarily tested on CDNA (MI2xx/MI3xx);
+if it errors on gfx1100, fall back to plain trl/peft QLoRA — same dataset and
+SFT config apply. Billing runs until the pod is DESTROYED, so pull ml/outputs/
 off the box and destroy it when done.
 ===============================================================================
 """
@@ -23,8 +28,9 @@ from __future__ import annotations
 
 import os
 
-# Must be set before torch/unsloth are imported anywhere.
-os.environ.setdefault("HSA_OVERRIDE_GFX_VERSION", "9.4.2")
+# Target is gfx1100 (Radeon PRO W7900) — natively supported by ROCm, so no
+# HSA_OVERRIDE_GFX_VERSION here. The previous MI300X-only override was:
+#   os.environ.setdefault("HSA_OVERRIDE_GFX_VERSION", "9.4.2")   # gfx942 spoof — WRONG for RDNA3
 os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
 
 import sys

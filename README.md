@@ -5,11 +5,11 @@
 **Describe your automation in plain language. Get a working, importable n8n workflow.**
 
 An open source, self hosted alternative to n8n's paid AI copilot, powered by a Gemma model
-fine tuned on thousands of real workflows on an AMD MI300X. Your prompts never leave your infrastructure.
+fine tuned on thousands of real workflows on an AMD Radeon PRO W7900. Your prompts never leave your infrastructure.
 
 ![License](https://img.shields.io/badge/license-MIT-black)
-![Model](https://img.shields.io/badge/model-Gemma%2012B%20LoRA-black)
-![Hardware](https://img.shields.io/badge/fine--tuned%20on-AMD%20MI300X-black)
+![Model](https://img.shields.io/badge/model-Gemma%20LoRA-black)
+![Hardware](https://img.shields.io/badge/fine--tuned%20on-AMD%20Radeon%20PRO%20W7900-black)
 ![Serving](https://img.shields.io/badge/serving-vLLM-black)
 
 </div>
@@ -39,17 +39,23 @@ hardware you control.
 ```
  frontend (React/Vite)  ──►  backend (FastAPI)  ──►  model endpoint (OpenAI-compatible)
         │                        │                      MODEL_MODE=fireworks  (dev)
-        │                        │                      MODEL_MODE=amd        (vLLM on MI300X)
+        │                        │                      MODEL_MODE=amd        (vLLM on Radeon PRO W7900)
         │                        ▼
         └──────────────►  n8n instance (REST API import + webhook test forms)
 ```
 
+**Data → model → proof pipeline:** 1,800 real community workflows are collected and cleaned,
+expanded to 5,400 chat pairs with LLM-rewritten natural-language requests, split 85/15 by
+template id (no leakage between rewrites of the same workflow), LoRA-fine-tuned into Gemma on
+AMD hardware, and benchmarked by a three-gate harness where the final gate is a **live n8n
+instance accepting the import** — not just a schema check.
+
 | Folder | Concern |
 |---|---|
 | `data/` | Collect (api.n8n.io + HF dataset), clean, enrich (LLM prompt rewrites), split |
-| `ml/` | Unsloth 16-bit LoRA SFT on MI300X: `data_loader` / `model_setup` / `train_config` / `finetune_sft` |
+| `ml/` | Unsloth 16-bit LoRA SFT on AMD ROCm: `data_loader` / `model_setup` / `train_config` / `finetune_sft` |
 | `eval/` | Three-gate harness: JSON parse → schema check → **live n8n import**; `run_eval` benchmarks any endpoint |
-| `serving/` | vLLM launch script for MI300X + a transformers FastAPI fallback |
+| `serving/` | vLLM launch script for the AMD GPU pod + a transformers FastAPI fallback |
 | `backend/` | `/generate` (validate + one retry), `/import`, `/testform`, `/results` |
 | `frontend/` | Landing, Generate, Result (import + live test form), Proof (benchmark numbers) |
 
@@ -80,43 +86,50 @@ python -m eval.run_eval --label base-gemma \
   --model "$FIREWORKS_MODEL" --api-key "$FIREWORKS_API_KEY" --limit 10   # then full run
 ```
 
-## Fine-tuning on AMD MI300X
+## Fine-tuning on AMD (Radeon PRO W7900)
 
 16-bit LoRA (r=16, α=32, attention+MLP projections, gradient checkpointing, bf16) with
-[Unsloth](https://github.com/unslothai/unsloth) on a single MI300X (192 GB, ROCm). Not QLoRA:
-bitsandbytes 4-bit is unstable on AMD and unnecessary at this scale. Training data is ~1,800
-cleaned community workflows expanded to ~5,000 chat pairs via LLM-rewritten natural-language
-requests.
+[Unsloth](https://github.com/unslothai/unsloth) on a single Radeon PRO W7900 (RDNA3 gfx1100,
+48 GB, ROCm). Not QLoRA: bitsandbytes 4-bit is unstable on AMD and unnecessary at this scale.
+Training data is 1,800 cleaned community workflows expanded to 5,400 chat pairs via
+LLM-rewritten natural-language requests.
 
 ```bash
-# on the MI300X droplet (setup commands in ml/finetune_sft.py header)
+# on the GPU pod (setup commands in ml/finetune_sft.py header)
 python -m ml.finetune_sft            # saves LoRA adapter + merged 16-bit model to ml/outputs/
 bash serving/serve_vllm.sh           # OpenAI-compatible endpoint on :8000
 ```
 
-Point the app at it: `MODEL_MODE=amd`, `AMD_MODEL_ENDPOINT=http://<droplet>:8000/v1`
-(or an SSH tunnel: `ssh -L 8000:localhost:8000 root@<droplet>`).
+Point the app at it: `MODEL_MODE=amd`, `AMD_MODEL_ENDPOINT=http://<pod>:8000/v1`
+(or an SSH tunnel: `ssh -L 8000:localhost:8000 root@<pod>`).
 
 ## Results
 
-Measured by the three-gate harness on a held-out set of real workflow requests
-(never seen in training). Gate 3 = a live n8n instance accepts the import.
+Measured by the three-gate harness on 810 held-out prompts (270 workflows never seen in
+training, incl. their rewrites). Gate 3 = a **live n8n instance accepts the import** via
+REST API — the strictest possible correctness check short of executing the workflow.
 
-| Run | JSON valid | Schema valid | Live import |
+| Run | Gate 1 · JSON valid | Gate 2 · Schema valid | Gate 3 · Live import |
 |---|---|---|---|
-| Base Gemma (before) | _pending_ | _pending_ | _pending_ |
-| FlowForge SFT (after) | _pending_ | _pending_ | _pending_ |
+| Base Gemma (before fine-tuning) | \_\_\_% | \_\_\_% | \_\_\_% |
+| **FlowForge SFT (after)** | **\_\_\_%** | **\_\_\_%** | **\_\_\_%** |
 
-> Numbers are produced by `eval/run_eval.py` and land in `eval/results/results.json`;
-> the Proof page renders them live. Baseline runs before fine-tuning; the SFT row is
-> filled after the MI300X training run.
+**Data quality floor (ground truth):** running the *training targets themselves* through the
+same three gates scores 100% JSON / 96.7% schema / 100% live-import of schema-valid examples
+(n=30 random held-out ground truths) — so the benchmark ceiling is real and the gates measure
+model quality, not dataset noise.
+
+> Both rows come from one command once both endpoints are up:
+> `python -m eval.compare_before_after --base-url <URL> --base-model <ID> --ft-url <URL> --ft-model flowforge`
+> which writes `eval/results/comparison.json` and prints this table. The Proof page renders
+> `eval/results/results.json` live.
 
 ## Prior art
 
 FlowForge builds on and differentiates from earlier n8n-generation work: mbakgun's
 Qwen3-Coder fine-tune and 2,737-template dataset, Nishan30's TypeScript-DSL approach,
 MustaphaL's Llama 3 fine-tune, and czlonkowski/n8n-mcp's node database and validator.
-Differences: AMD MI300X + Gemma, a live-import evaluation gate (not just schema checks),
+Differences: AMD ROCm + Gemma, a live-import evaluation gate (not just schema checks),
 and a complete self-hosted product around the model.
 
 ## License

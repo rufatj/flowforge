@@ -2,7 +2,7 @@
 
 MODEL_MODE decides the backend:
   - "fireworks" -> https://api.fireworks.ai/inference/v1  (development / base model)
-  - "amd"       -> AMD_MODEL_ENDPOINT (your vLLM server on MI300X, demo/judging)
+  - "amd"       -> AMD_MODEL_ENDPOINT (your vLLM server on the AMD GPU pod, demo/judging)
 
 Both are OpenAI-compatible, so the same openai python client works for both;
 only base_url / api_key / model change. Route logic elsewhere never needs to

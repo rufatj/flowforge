@@ -1,0 +1,2 @@
+# Keep shell scripts LF so they run on the Linux GPU pod even when cloned on Windows.
+*.sh text eol=lf

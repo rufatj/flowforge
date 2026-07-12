@@ -1,10 +1,63 @@
+import { useEffect, useRef } from "react";
 import Reveal from "../Reveal.jsx";
 import Eyebrow from "./Eyebrow.jsx";
 
-// The portrait plays with no frame. Its near-black backdrop and a radial edge
-// mask let it dissolve straight into the page, so it feels present in the room
-// rather than pasted into a box. A faint cyan halo gives it depth.
+// A soft studio light that leans toward the cursor: the portrait drifts a
+// few pixels away from the pointer and a cyan glow slides beneath it, so the
+// frameless image feels touchable instead of pasted in place.
+function usePortraitLight() {
+  const wrapRef = useRef(null);
+  const imgRef = useRef(null);
+  const glowRef = useRef(null);
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    const img = imgRef.current;
+    const glow = glowRef.current;
+    if (!wrap || !img) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let frame = 0;
+    let pointer = null;
+
+    const render = () => {
+      frame = 0;
+      if (!pointer) return;
+      const r = wrap.getBoundingClientRect();
+      const px = (pointer.x - r.left) / r.width - 0.5;
+      const py = (pointer.y - r.top) / r.height - 0.5;
+      img.style.transform = `translate3d(${(-px * 12).toFixed(2)}px, ${(-py * 12).toFixed(2)}px, 0) scale(1.05)`;
+      if (glow) {
+        glow.style.opacity = "1";
+        glow.style.background =
+          `radial-gradient(220px circle at ${((px + 0.5) * 100).toFixed(1)}% ${((py + 0.5) * 100).toFixed(1)}%, rgba(125,211,252,0.4), transparent 70%)`;
+      }
+    };
+    const onMove = (e) => {
+      pointer = { x: e.clientX, y: e.clientY };
+      if (!frame) frame = requestAnimationFrame(render);
+    };
+    const onLeave = () => {
+      pointer = null;
+      img.style.transform = "";
+      if (glow) glow.style.opacity = "0";
+    };
+
+    wrap.addEventListener("mousemove", onMove);
+    wrap.addEventListener("mouseleave", onLeave);
+    return () => {
+      wrap.removeEventListener("mousemove", onMove);
+      wrap.removeEventListener("mouseleave", onLeave);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  return { wrapRef, imgRef, glowRef };
+}
+
 export default function Story() {
+  const { wrapRef, imgRef, glowRef } = usePortraitLight();
+
   return (
     <section id="story" className="scroll-mt-24 py-28">
       <div className="mx-auto max-w-6xl px-6">
@@ -12,11 +65,19 @@ export default function Story() {
           <Reveal className="relative mx-auto w-full max-w-sm">
             <div aria-hidden="true" className="absolute inset-0 -z-10 blur-3xl"
               style={{ background: "radial-gradient(50% 50% at 50% 45%, rgba(56,189,248,0.16), transparent)" }} />
-            <img
-              src="/assets/human-face.gif"
-              alt="A portrait, for the people behind FlowForge"
-              className="mask-blend aspect-[4/5] w-full select-none object-cover"
-            />
+            <div ref={wrapRef} className="relative aspect-[4/5] w-full">
+              <img
+                ref={imgRef}
+                src="/assets/human-face.gif"
+                alt="A portrait, for the people behind FlowForge"
+                className="mask-blend h-full w-full select-none object-cover transition-transform duration-500 ease-out will-change-transform"
+              />
+              <div
+                ref={glowRef}
+                aria-hidden="true"
+                className="mask-blend pointer-events-none absolute inset-0 opacity-0 mix-blend-screen transition-opacity duration-500"
+              />
+            </div>
           </Reveal>
 
           <div>

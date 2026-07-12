@@ -15,23 +15,23 @@ body {
 }
 
 /* ----------------------------------------------------------------- reveal --
-   Scroll-into-view entrance. Elements start hidden and settle with ease-out.
-   A .is-visible class is added once by the useReveal IntersectionObserver. */
+   Scroll-into-view entrance with a soft blur settle. Added once by useReveal. */
 .reveal {
   opacity: 0;
-  transform: translateY(22px);
-  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity, transform;
+  transform: translateY(26px);
+  filter: blur(6px);
+  transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform, filter;
 }
 .reveal.is-visible {
   opacity: 1;
   transform: none;
+  filter: blur(0);
 }
 
-/* ------------------------------------------------------------- ambient art --
-   Slow, continuous loops for the luxury background. Long durations on purpose:
-   these are atmosphere, not micro-interactions. */
+/* ------------------------------------------------------------- ambient art -- */
 @keyframes aurora-drift {
   0%   { transform: translate3d(-6%, -3%, 0) scale(1); }
   50%  { transform: translate3d(6%, 4%, 0) scale(1.12); }
@@ -49,19 +49,108 @@ body {
   to   { transform: scaleY(1); }
 }
 
+/* Notification-style pop for node tags. */
+@keyframes tag-pop {
+  0%   { opacity: 0; transform: translateY(14px) scale(0.7); }
+  70%  { opacity: 1; transform: translateY(-2px) scale(1.06); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Rocket launch: up and away, then a fresh arrow rises from below. */
+@keyframes rocket {
+  0%   { transform: translateY(0); opacity: 1; }
+  45%  { transform: translateY(-46px) scale(0.9); opacity: 0; }
+  50%  { transform: translateY(26px) scale(0.9); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* Typewriter caret. */
+@keyframes caret-blink {
+  0%, 45% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* One-time ignition ring on timeline dots. */
+@keyframes ignite {
+  0%   { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.55); }
+  100% { box-shadow: 0 0 0 14px rgba(56, 189, 248, 0); }
+}
+
 .animate-aurora { animation: aurora-drift 26s ease-in-out infinite; }
 .animate-spin-slow { animation: spin-slow 14s linear infinite; }
-.animate-breathe { animation: breathe 6s ease-in-out infinite; }
 
-/* Mask helper: fade a media element's edges into the page so it reads frameless. */
+/* Fullpage scroll hint caret */
+@keyframes scroll-hint-fade {
+  0%, 100% { opacity: 0; transform: scaleY(0.4); }
+  50%       { opacity: 1; transform: scaleY(1); }
+}
+
+/* Slide-in transitions for fullpage sections */
+@keyframes slide-in-up {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-in-down {
+  from { opacity: 0; transform: translateY(-40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fp-enter { animation: slide-in-up 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+.animate-breathe { animation: breathe 6s ease-in-out infinite; }
+.animate-rocket { animation: rocket 0.9s cubic-bezier(0.45, -0.1, 0.6, 1.2); }
+.animate-tag-pop { animation: tag-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-ignite { animation: ignite 0.9s ease-out 1; }
+.animate-caret { animation: caret-blink 1.1s steps(1) infinite; }
+
+/* Border beam: a thin conic arc orbiting the input frame on hover/focus. The
+   oversized square spins inside an overflow-hidden ring layer; the inner panel
+   covers everything except a ~1.5px rim. */
+.beam-layer {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.beam-layer::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 260%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: conic-gradient(
+    transparent 0deg, transparent 300deg,
+    rgba(56, 189, 248, 0.9) 335deg, rgba(125, 211, 252, 1) 350deg,
+    transparent 360deg
+  );
+  animation: spin-slow 3.2s linear infinite;
+}
+.group:hover .beam-layer,
+.group:focus-within .beam-layer {
+  opacity: 1;
+}
+
+/* Mask helper: fade a media element's edges into the page (frameless media). */
 .mask-blend {
   -webkit-mask-image: radial-gradient(75% 75% at 50% 45%, #000 55%, transparent 100%);
   mask-image: radial-gradient(75% 75% at 50% 45%, #000 55%, transparent 100%);
 }
 
-/* Honor reduced-motion: no smooth scroll, no loops, everything shown at rest. */
+/* 3D tilt targets get their own transition; JS only writes transform. */
+.tilt {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* Honor reduced motion everywhere. */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .reveal { opacity: 1; transform: none; transition: none; }
-  .animate-aurora, .animate-spin-slow, .animate-breathe { animation: none; }
+  .reveal { opacity: 1; transform: none; filter: none; transition: none; }
+  .animate-aurora, .animate-spin-slow, .animate-breathe, .animate-rocket,
+  .animate-tag-pop, .animate-ignite, .animate-caret { animation: none; }
+  .beam-layer { display: none; }
+  .tilt { transition: none; }
 }

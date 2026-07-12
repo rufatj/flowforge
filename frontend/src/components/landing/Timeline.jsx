@@ -1,5 +1,6 @@
 import Reveal from "../Reveal.jsx";
 import Eyebrow from "./Eyebrow.jsx";
+import { useReveal } from "../../hooks/useReveal.js";
 
 const STEPS = [
   { k: "01", t: "You write a sentence", d: "Plain language, the way you would ask a teammate. No schema, no syntax." },
@@ -9,21 +10,29 @@ const STEPS = [
   { k: "05", t: "You refine and own it", d: "Open weights and open evaluation mean you can see why it works and make it sharper." },
 ];
 
-// The path from idea to running automation, as a vertical timeline. The spine
-// draws down on reveal; each stop fades in with a small stagger.
+// Roadmap logic: the spine draws downward first, then each stop ignites in
+// order, its number chip flaring once as it comes alive.
 export default function Timeline() {
+  const spine = useReveal({ threshold: 0.1 });
+
   return (
     <section id="journey" className="scroll-mt-24 py-28">
       <div className="mx-auto max-w-3xl px-6">
         <Eyebrow label="The path" title="From idea to a running automation" align="center" />
 
-        <div className="relative mt-16 pl-10">
-          <Reveal className="absolute left-[14px] top-1 h-full w-px origin-top bg-gradient-to-b from-accent/70 via-accent/25 to-transparent"
-            style={{ animation: "draw-line 1.1s cubic-bezier(0.22,1,0.36,1) both" }} />
+        <div ref={spine.ref} className="relative mt-16 pl-10">
+          <div
+            className="absolute left-[14px] top-1 h-full w-px origin-top bg-gradient-to-b from-accent/70 via-accent/25 to-transparent"
+            style={{ transform: spine.visible ? "scaleY(1)" : "scaleY(0)",
+              transition: "transform 1.4s cubic-bezier(0.22,1,0.36,1)" }}
+          />
           <ol className="space-y-11">
             {STEPS.map((s, i) => (
-              <Reveal as="li" key={s.k} delay={i * 90} className="relative">
-                <span className="absolute -left-10 top-0 flex h-7 w-7 items-center justify-center rounded-full border border-accent/40 bg-ink-950 font-mono text-[11px] text-accent shadow-[0_0_16px_-4px_rgba(56,189,248,0.7)]">
+              <Reveal as="li" key={s.k} delay={200 + i * 190} className="relative">
+                <span
+                  className={`absolute -left-10 top-0 flex h-7 w-7 items-center justify-center rounded-full border border-accent/40 bg-ink-950 font-mono text-[11px] text-accent shadow-[0_0_16px_-4px_rgba(56,189,248,0.7)] ${spine.visible ? "animate-ignite" : ""}`}
+                  style={{ animationDelay: `${300 + i * 190}ms` }}
+                >
                   {s.k}
                 </span>
                 <h3 className="text-lg font-semibold text-zinc-100">{s.t}</h3>
