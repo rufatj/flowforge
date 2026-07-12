@@ -38,7 +38,7 @@ def build_sft_config():
         per_device_train_batch_size=PER_DEVICE_BATCH,
         gradient_accumulation_steps=GRAD_ACCUM,
         logging_steps=LOGGING_STEPS,
-        save_strategy="epoch",
+        save_strategy="steps", save_steps=50, save_total_limit=2,
         bf16=True,
         optim="adamw_8bit",
         weight_decay=0.01,

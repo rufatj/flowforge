@@ -1,21 +1,18 @@
-"""Fallback server for the AMD GPU pod: transformers + FastAPI, OpenAI-compatible.
-
-Target GPU: Radeon PRO W7900 (RDNA3, gfx1100) — natively supported by ROCm,
-so no HSA_OVERRIDE_GFX_VERSION is needed (the old 9.4.2 override was an
-MI300X/gfx942 spoof and is wrong for this card).
+"""Fallback server for MI300X: transformers + FastAPI, OpenAI-compatible.
 
 Use ONLY if vLLM misbehaves on ROCm. Exposes POST /v1/chat/completions with
 just enough of the OpenAI schema for backend/app/model_client.py and
 eval/run_eval.py to work unchanged (MODEL_MODE=amd pointed at this port).
 
-On the pod:
-    python serving/serve_fallback.py \
+On the droplet:
         --model ml/outputs/merged-gemma-flowforge --port 8000
 """
 from __future__ import annotations
 
 import argparse
+import os
 import time
+
 
 from fastapi import FastAPI
 from pydantic import BaseModel
